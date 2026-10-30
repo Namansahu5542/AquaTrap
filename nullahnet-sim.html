@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NullahNet concept simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #efe8dc;
+    --ink: #1c1917;
+    --muted: #57534e;
+    --line: #d6d3d1;
+    --panel: #fffdf8;
+    --accent: #0f766e;
+    --warn: #c2410c;
+    --bad: #b91c1c;
+    --ok: #15803d;
+    --chip: #e7e5e4;
+    --track: #d6d3d1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141210;
+      --ink: #f5f5f4;
+      --muted: #a8a29e;
+      --line: #3f3a36;
+      --panel: #1c1917;
+      --chip: #292524;
+      --track: #44403c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 16px/1.45 Outfit, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header, footer, main { padding: 16px 18px; }
+  header h1 {
+    margin: 0 0 4px;
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 560;
+  }
+  header p, footer { color: var(--muted); margin: 0; font-size: 0.95rem; }
+  .tag {
+    display: inline-block;
+    margin-bottom: 8px;
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.78fr);
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    header, footer, main { padding: 12px; }
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  aside.panel { max-height: calc(100vh - 140px); overflow: auto; }
+  @media (max-width: 900px) { aside.panel { max-height: none; } }
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    background: #0c4a6e;
+  }
+  #side { margin-top: 8px; background: #0f172a; }
+  .charts canvas { background: transparent; border: 1px solid var(--line); margin-top: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  label { font-size: 14px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  input[type="range"] { width: min(140px, 42vw); }
+  button, select {
+    font: inherit;
+    border: 1px solid var(--line);
+    background: var(--chip);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .badge {
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--ok);
+  }
+  .badge.high { background: var(--warn); }
+  .badge.fault, .badge.maint { background: var(--bad); }
+  .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .meter { border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+  .meter b { display: block; font-size: 1.05rem; }
+  .bar { height: 12px; background: var(--track); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .bar > span { display: block; height: 100%; background: var(--accent); width: 0; }
+  .acct {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 4px;
+    font-size: 15px;
+  }
+  .acct span {
+    background: var(--chip);
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+  .acct .ok { color: var(--ok); font-weight: 600; }
+  .acct .bad { color: var(--bad); font-weight: 600; }
+  .log {
+    max-height: 140px;
+    overflow: auto;
+    font-size: 13px;
+    border-top: 1px solid var(--line);
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+  .log div { padding: 3px 0; border-bottom: 1px solid var(--line); }
+  .note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; font-family: Fraunces, Georgia, serif; font-weight: 560; }
+  footer { border-top: 1px solid var(--line); background: var(--bg); }
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="tag">Illustrative concept · not a validated model</div>
+  <h1>NullahNet plastic interception</h1>
+  <p>Top-down nullah. Water flows left to right. Bubble curtain and boom meet at the collection net, then the wheel lifts plastic onto the belt.</p>
+</header>
+<main>
+  <section class="panel">
+    <canvas id="view" width="1000" height="540" aria-label="Nullah channel simulation"></canvas>
+    <canvas id="side" width="1000" height="220" aria-label="Side view of bubble lift"></canvas>
+    <div class="row">
+      <label>Flow <input id="flow" type="range" min="0" max="100" value="35"> <span id="flowv">35%</span></label>
+      <label>Plastic rate <input id="rate" type="range" min="1" max="20" value="6"> <span id="ratev">6/s</span></label>
+      <label><input id="bub" type="checkbox" checked> Bubble curtain</label>
+      <label><input id="boom" type="checkbox" checked> Boom</label>
+      <label><input id="flood" type="checkbox" checked> Passive flood release</label>
+    </div>
+    <div class="row">
+      <label>High-flow bubbles
+        <select id="bubmode">
+          <option value="keep">Keep on</option>
+          <option value="reduce" selected>Reduce</option>
+          <option value="off">Off</option>
+        </select>
+      </label>
+      <button id="jam" type="button">Trigger jam</button>
+      <button id="fault" type="button">Trigger sensor fault</button>
+      <button id="empty" type="button">Empty bin</button>
+      <button id="tide" type="button">Reverse tide</button>
+      <button id="pause" type="button">Pause</button>
+      <button id="spd" type="button">Speed 1×</button>
+      <button id="reset" type="button">Reset</button>
+      <button id="compare" type="button">Run comparison</button>
+      <span id="cmpprog" class="note"></span>
+    </div>
+  </section>
+  <aside class="panel">
+    <h2>Live dashboard <span id="badge" class="badge">NORMAL</span></h2>
+    <div class="meters">
+      <div class="meter">Flow speed<b id="mflow">0.71 m/s</b><div class="bar"><span id="bflow"></span></div></div>
+      <div class="meter">Boom load<b id="mload">0.16</b><div class="bar"><span id="bload"></span></div></div>
+      <div class="meter">Motor current<b id="mcur">1.2 A</b><div class="bar"><span id="bcur"></span></div></div>
+      <div class="meter">Air pressure<b id="mair">28 kPa</b><div class="bar"><span id="bair"></span></div></div>
+      <div class="meter">Water level<b id="mlevel">0.42 m</b><div class="bar"><span id="blevel"></span></div></div>
+      <div class="meter">Bin fill<b id="mbin">0%</b><div class="bar"><span id="bbin"></span></div></div>
+    </div>
+    <p>Spawned <b id="cspawn">0</b> · Captured <b id="ccap">0</b> · In bin <b id="cbin">0</b> · Escaped <b id="cesc">0</b> · Capture <b id="cpct">–</b></p>
+    <div class="acct" id="acct"></div>
+    <div class="charts">
+      <canvas id="comp" width="360" height="160" aria-label="Captured composition"></canvas>
+      <canvas id="trend" width="360" height="180" aria-label="Capture percent versus flow"></canvas>
+      <canvas id="bars" width="360" height="200" aria-label="Layout comparison"></canvas>
+    </div>
+    <p class="note" id="cmpnote" hidden>Simplified model with placeholder parameters. Not field-validated.</p>
+    <div class="log" id="log" aria-live="polite"></div>
+  </aside>
+</main>
+<footer>Concept simulation with illustrative parameters. Real performance in Mumbai's tidal and monsoon conditions needs field validation.</footer>
+<script>
+/* Placeholder parameters. Tune capture, wheel, net and belt here. Not field data. */
+const CFG = {
+  dt: 1 / 60,
+  viewW: 1000,
+  viewH: 540,
+  gapFrac: 0.08,
+  tubeStartAlong: 0.08,
+  tubeStartAcross: 0.10,
+  mouthAlong: 0.50,
+  flowMin: 0.12,
+  flowMax: 1.75,
+  pxPerMs: 150,
+  spawnY: [0.12, 0.72],
+  bubble: { lift: 0.85, guide: 0.82, band: 36, slide: 130 },
+  boom: { escape0: 0.08, escape1: 0.62, band: 22, slide: 150 },
+  mouthR: 28,
+  floodOpen: 0.78,
+  floodClose: 0.45,
+  floodHold: 2.5,
+  highOn: 62,
+  highOff: 48,
+  wheelRpm: 14,
+  arms: 6,
+  scoopCap: 3,
+  wheelR: 52,
+  beltSpeed: 78,
+  beltLen: 168,
+  netCap: 14,
+  binCap: 40,
+  binStop: 0.85,
+  jamReverse: 0.7,
+  jamRetry: 1.1,
+  tideSec: 6,
+  compareSec: 14,
+  compareRate: 7,
+  compareSeed: 0x4E554C31,
+  types: {
+    bag: { color: "#38bdf8", sub: false },
+    bottle: { color: "#fbbf24", sub: false },
+    sachet: { color: "#f472b6", sub: false },
+    foam: { color: "#e5e7eb", sub: false },
+    submerged: { color: "#94a3b8", sub: true }
+  }
+};
+
+const $ = (id) => document.getElementById(id);
+const canvas = $("view");
+const ctx = canvas.getContext("2d");
+const side = $("side");
+const sctx = side.getContext("2d");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const speeds = [1, 2, 4];
+let speedI = 0;
+let paused = false;
+let acc = 0;
+let last = performance.now();
+let comparing = false;
+
+function stillFrame() { return paused || reduceMotion.matches; }
+
+function mulberry32(a) {
+  return function () {
+    a |= 0;
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function blank() {
+  return {
+    parts: [], spawned: 0, escaped: 0, bin: 0, binHold: false,
+    byType: { bag: 0, bottle: 0, sachet: 0, foam: 0, submerged: 0 },
+    wheelAng: 18, beltPhase: 0, bubbles: [], drips: [],
+    mode: "normal", highLatched: false, fault: false, maint: false,
+    jam: null, boomOpen: false, boomOpenAt: 0, tideUntil: 0, dir: 1,
+    spawnAcc: 0, overflowUntil: 0,
+    armItems: [[], [], [], [], [], []],
+    armZone: ["", "", "", "", "", ""],
+    t: 0, idn: 1, log: [], trend: [], cmp: null, lastTrendFlow: -1
+  };
+}
+const state = blank();
+
+function geo() {
+  const ch = { x: 36, y: 36, w: CFG.viewW - 72, h: 300 };
+  const gap = ch.w * CFG.gapFrac;
+  const mouth = { x: ch.x + ch.w * CFG.mouthAlong, y: ch.y + ch.h - 2 };
+  const tubeA = { x: ch.x + ch.w * CFG.tubeStartAlong, y: ch.y + ch.h * CFG.tubeStartAcross };
+  const boomA = { x: tubeA.x + gap, y: tubeA.y };
+  const wheel = { x: mouth.x + 8, y: ch.y + ch.h + 6, r: CFG.wheelR };
+  const net = { x: mouth.x - 46, y: mouth.y - 8, w: 92, h: 78, rim: mouth.y };
+  const belt = { x: wheel.x + 18, y: ch.y + ch.h + 36, w: CFG.beltLen, h: 20 };
+  const bin = { x: belt.x + belt.w + 10, y: belt.y - 36, w: 52, h: 64 };
+  return { ch, gap, mouth, tubeA, tubeC: mouth, boomA, boomC: mouth, wheel, belt, bin, net };
+}
+
+function flowMsOf(env) {
+  return CFG.flowMin + (CFG.flowMax - CFG.flowMin) * (env.flowPct / 100);
+}
+function rawLoadOf(env) {
+  if (!env.boomOn) return 0;
+  return Math.pow(flowMsOf(env) / CFG.flowMax, 2);
+}
+function bubbleMode(sim, env) {
+  if (sim.fault || !env.bubOn) return "off";
+  if (sim.highLatched) return env.bubMode;
+  return "keep";
+}
+function airKpa(sim, env) {
+  const w = bubbleMode(sim, env);
+  if (w === "off") return 0;
+  if (sim.highLatched && w === "keep") return 42;
+  if (sim.highLatched && w === "reduce") return 18;
+  return 28;
+}
+function netCount(sim) { return sim.parts.filter((p) => p.state === "in_net").length; }
+function armLoad(sim) { return sim.armItems.reduce((n, a) => n + a.length, 0); }
+function wheelShouldSpin(sim) {
+  if (sim.fault || sim.binHold || sim.maint) return false;
+  if (sim.jam && sim.jam.phase === "reverse") return true;
+  if (sim.jam && sim.jam.phase !== "run") return false;
+  if (sim.highLatched) return true;
+  return netCount(sim) > 0 || armLoad(sim) > 0;
+}
+function beltShouldMove(sim) {
+  if (sim.fault || sim.binHold || sim.maint) return false;
+  if (sim.jam && sim.jam.phase === "spike") return false;
+  return sim.parts.some((p) => p.state === "on_belt");
+}
+function log(sim, msg) {
+  const m = Math.floor(sim.t / 60);
+  const s = Math.floor(sim.t % 60);
+  sim.log.unshift(String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0") + "  " + msg);
+  sim.log = sim.log.slice(0, 28);
+}
+function normDeg(d) { return ((d % 360) + 360) % 360; }
+function counts(sim) {
+  const c = { in_channel: 0, deflected: 0, in_net: 0, on_wheel: 0, on_belt: 0, in_bin: sim.bin, escaped: sim.escaped };
+  sim.parts.forEach((p) => { c[p.state] = (c[p.state] || 0) + 1; });
+  c.sum = c.in_channel + c.deflected + c.in_net + c.on_wheel + c.on_belt + c.in_bin + c.escaped;
+  c.captured = c.in_net + c.on_wheel + c.on_belt + c.in_bin;
+  c.ratio = (c.captured + c.escaped) ? c.captured / (c.captured + c.escaped) : null;
+  return c;
+}
+function spawnOne(sim, env) {
+  const g = geo();
+  const keys = Object.keys(CFG.types);
+  const type = keys[Math.floor(env.rand() * keys.length)];
+  const yf = CFG.spawnY[0] + env.rand() * (CFG.spawnY[1] - CFG.spawnY[0]);
+  sim.parts.push({
+    id: sim.idn++, type, sub: CFG.types[type].sub, state: "in_channel",
+    x: sim.dir > 0 ? g.ch.x + 12 : g.ch.x + g.ch.w - 12,
+    y: g.ch.y + yf * g.ch.h, rail: null, boomTried: false, tubeTried: false, belt: 0, arm: -1
+  });
+  sim.spawned++;
+}
+function nearSeg(px, py, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const l2 = dx * dx + dy * dy || 1;
+  let t = ((px - a.x) * dx + (py - a.y) * dy) / l2;
+  t = Math.max(0, Math.min(1, t));
+  const x = a.x + t * dx, y = a.y + t * dy;
+  return { t, x, y, d: Math.hypot(px - x, py - y) };
+}
+function slideTo(p, a, b, speed, dt) {
+  const hit = nearSeg(p.x, p.y, a, b);
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = hit.x + (dx / len) * speed * dt;
+  const ny = hit.y + (dy / len) * speed * dt;
+  const t2 = nearSeg(nx, ny, a, b).t;
+  const t = Math.min(1, Math.max(hit.t, t2));
+  p.x = a.x + (b.x - a.x) * t;
+  p.y = a.y + (b.y - a.y) * t;
+  return Math.hypot(p.x - b.x, p.y - b.y);
+}
+function enterNet(sim, p) {
+  if (netCount(sim) >= CFG.netCap) {
+    sim.escaped++;
+    sim.overflowUntil = sim.t + 1.6;
+    sim.parts = sim.parts.filter((q) => q !== p);
+    if (!sim._overflowLogged || sim.t - sim._overflowLogged > 1.5) {
+      sim._overflowLogged = sim.t;
+      log(sim, "Net overflow: extra plastic escaped");
+    }
+    return;
+  }
+  p.state = "in_net";
+  p.rail = null;
+  p.sub = false;
+  sim.byType[p.type]++;
+}
+function scoopPos(sim, i, g) {
+  const deg = normDeg(sim.wheelAng + i * (360 / CFG.arms));
+  const a = deg * Math.PI / 180;
+  return { deg, x: g.wheel.x + Math.cos(a) * g.wheel.r, y: g.wheel.y + Math.sin(a) * g.wheel.r };
+}
+function step(sim, env, dt) {
+  const g = geo();
+  const pct = env.flowPct;
+  const flowF = flowMsOf(env) / CFG.flowMax;
+  sim.dir = sim.t < sim.tideUntil ? -1 : 1;
+  const vx = flowMsOf(env) * CFG.pxPerMs * sim.dir;
+  if (!sim.fault && pct >= CFG.highOn && !sim.highLatched) {
+    sim.highLatched = true;
+    log(sim, "Mode HIGH-FLOW WARNING");
+  }
+  if (!sim.fault && pct <= CFG.highOff && sim.highLatched) {
+    sim.highLatched = false;
+    log(sim, "Mode NORMAL");
+  }
+  const raw = rawLoadOf(env);
+  if (env.flood && env.boomOn && !sim.boomOpen && raw >= CFG.floodOpen) {
+    sim.boomOpen = true;
+    sim.boomOpenAt = sim.t;
+    log(sim, "Flood release: boom swung open");
+  }
+  if (sim.boomOpen && sim.t - sim.boomOpenAt > CFG.floodHold && raw <= CFG.floodClose) {
+    sim.boomOpen = false;
+    log(sim, "Boom reset");
+  }
+  let mode = sim.fault ? "fault" : sim.maint ? "maint" : sim.highLatched ? "high" : "normal";
+  if (mode !== sim.mode) {
+    sim.mode = mode;
+    if (mode === "fault") log(sim, "Mode FAULT: drives and air pump off");
+    if (mode === "maint") log(sim, "Mode MAINTENANCE");
+  }
+  sim.spawnAcc += dt * env.rate;
+  while (sim.spawnAcc >= 1) { sim.spawnAcc -= 1; spawnOne(sim, env); }
+  const bub = bubbleMode(sim, env);
+  const liftScale = bub === "off" ? 0 : bub === "reduce" ? 0.4 : 1;
+  if (bub !== "off" && env.rand() < dt * 16) {
+    const t = env.rand();
+    sim.bubbles.push({
+      x: g.tubeA.x + (g.tubeC.x - g.tubeA.x) * t,
+      y: g.tubeA.y + (g.tubeC.y - g.tubeA.y) * t,
+      life: 0.9
+    });
+  }
+  sim.bubbles.forEach((b) => { b.life -= dt; b.y -= 22 * dt; });
+  sim.bubbles = sim.bubbles.filter((b) => b.life > 0);
+  sim.drips.forEach((d) => { d.life -= dt; d.y += 36 * dt; });
+  sim.drips = sim.drips.filter((d) => d.life > 0);
+  const spinning = wheelShouldSpin(sim);
+  const reversing = sim.jam && sim.jam.phase === "reverse";
+  if (spinning) sim.wheelAng += (reversing ? -1 : 1) * CFG.wheelRpm * 6 * dt;
+  if (beltShouldMove(sim)) sim.beltPhase += CFG.beltSpeed * dt;
+  if (sim.jam) {
+    sim.jam.t -= dt;
+    if (sim.jam.t <= 0) {
+      if (sim.jam.phase === "spike") {
+        sim.jam = { phase: "reverse", t: CFG.jamReverse };
+        log(sim, "Jam: wheel reverse");
+      } else if (sim.jam.phase === "reverse") {
+        sim.jam = { phase: "retry", t: CFG.jamRetry };
+        log(sim, "Jam: retry");
+      } else {
+        sim.maint = true;
+        sim.jam = null;
+        log(sim, "Maintenance alert: jam persists");
+      }
+    }
+  }
+  const boomLive = env.boomOn && !sim.boomOpen;
+  for (const p of sim.parts) {
+    if (p.state === "on_wheel" || p.state === "on_belt" || p.state === "in_net") continue;
+    if (p.rail === "tube" && liftScale > 0 && sim.dir > 0) {
+      p.state = "deflected";
+      if (p.sub && env.rand() < CFG.bubble.lift * liftScale * (1 - 0.8 * flowF) * dt * 3) p.sub = false;
+      if (slideTo(p, g.tubeA, g.tubeC, CFG.bubble.slide * (0.55 + 0.45 * (1 - flowF)), dt) < CFG.mouthR && !p.sub) enterNet(sim, p);
+      continue;
+    }
+    if (p.rail === "boom" && boomLive && sim.dir > 0 && !p.sub) {
+      p.state = "deflected";
+      if (slideTo(p, g.boomA, g.boomC, CFG.boom.slide * (0.5 + 0.5 * (1 - flowF)), dt) < CFG.mouthR) enterNet(sim, p);
+      continue;
+    }
+    p.rail = null;
+    p.x += vx * dt;
+    if (liftScale > 0 && sim.dir > 0 && !p.tubeTried) {
+      const hit = nearSeg(p.x, p.y, g.tubeA, g.tubeC);
+      if (hit.d < CFG.bubble.band && hit.t < 0.92) {
+        p.tubeTried = true;
+        if (env.rand() < CFG.bubble.guide * liftScale * (1 - 0.55 * flowF)) {
+          p.rail = "tube"; p.state = "deflected"; p.x = hit.x; p.y = hit.y;
+        }
+      }
+    }
+    if (p.rail === "tube") continue;
+    if (boomLive && !p.sub && !p.boomTried && sim.dir > 0) {
+      const hit = nearSeg(p.x, p.y, g.boomA, g.boomC);
+      if (hit.d < CFG.boom.band && hit.t < 0.94) {
+        p.boomTried = true;
+        const esc = CFG.boom.escape0 + (CFG.boom.escape1 - CFG.boom.escape0) * flowF;
+        if (env.rand() < esc) { p.x = hit.x + 26; p.y = hit.y - 14; }
+        else { p.rail = "boom"; p.state = "deflected"; p.x = hit.x; p.y = hit.y; }
+      }
+    }
+    if (!p.sub && sim.dir > 0 && Math.hypot(p.x - g.mouth.x, p.y - g.mouth.y) < CFG.mouthR) enterNet(sim, p);
+  }
+  sim.parts.filter((p) => p.state === "in_net").forEach((p, i) => {
+    const col = i % 4, row = Math.floor(i / 4);
+    p.x = g.net.x + 16 + col * 18;
+    p.y = g.net.y + 22 + row * 16;
+  });
+  if (spinning && !reversing) {
+    for (let i = 0; i < CFG.arms; i++) {
+      const sc = scoopPos(sim, i, g);
+      let zone = "travel";
+      if (sc.deg >= 248 && sc.deg <= 292) zone = "dip";
+      else if (sc.deg >= 62 && sc.deg <= 108) zone = "tip";
+      if (zone === "dip" && sim.armZone[i] !== "dip") {
+        let took = 0;
+        for (let k = sim.parts.length - 1; k >= 0 && took < CFG.scoopCap; k--) {
+          const p = sim.parts[k];
+          if (p.state !== "in_net") continue;
+          p.state = "on_wheel";
+          p.arm = i;
+          sim.armItems[i].push(p);
+          took++;
+        }
+        if (took) sim.drips.push({ x: sc.x, y: sc.y, life: 0.45 });
+      }
+      if (zone === "tip" && sim.armZone[i] !== "tip") {
+        sim.armItems[i].forEach((p) => { p.state = "on_belt"; p.arm = -1; p.belt = 0; p.sub = false; });
+        sim.armItems[i] = [];
+        sim.drips.push({ x: sc.x, y: sc.y, life: 0.4 });
+      }
+      sim.armZone[i] = zone;
+    }
+  }
+  for (let i = 0; i < CFG.arms; i++) {
+    const sc = scoopPos(sim, i, g);
+    sim.armItems[i].forEach((p, j) => { p.x = sc.x + (j - 1) * 7; p.y = sc.y + (j - 1) * 4; });
+  }
+  const movingBelt = beltShouldMove(sim);
+  for (const p of [...sim.parts]) {
+    if (p.state !== "on_belt") continue;
+    if (movingBelt) p.belt += CFG.beltSpeed * dt;
+    p.x = g.belt.x + 10 + p.belt;
+    p.y = g.belt.y + 10;
+    if (p.belt >= g.belt.w - 14) {
+      p.state = "in_bin";
+      sim.bin++;
+      sim.parts = sim.parts.filter((q) => q !== p);
+      if (sim.bin / CFG.binCap >= CFG.binStop && !sim.binHold) {
+        sim.binHold = true;
+        log(sim, "BIN FULL: wheel and conveyor stopped");
+      }
+    }
+  }
+  const left = g.ch.x - 8, right = g.ch.x + g.ch.w + 8;
+  sim.parts = sim.parts.filter((p) => {
+    if (p.state !== "in_channel" && p.state !== "deflected") return true;
+    if (p.x < left || p.x > right || p.y < g.ch.y - 8 || p.y > g.ch.y + g.ch.h + 12) {
+      sim.escaped++;
+      return false;
+    }
+    return true;
+  });
+  if (env.live && counts(sim).ratio !== null && Math.abs(pct - sim.lastTrendFlow) >= 4) {
+    sim.trend.push({ p: pct, c: counts(sim).ratio });
+    sim.trend = sim.trend.slice(-40);
+    sim.lastTrendFlow = pct;
+  }
+  sim.t += dt;
+}
+function liveEnv() {
+  return {
+    flowPct: Number($("flow").value),
+    bubOn: $("bub").checked,
+    boomOn: $("boom").checked,
+    flood: $("flood").checked,
+    rate: Number($("rate").value),
+    bubMode: $("bubmode").value,
+    rand: Math.random,
+    live: true
+  };
+}
+function label(c, text, x, y) {
+  c.font = "600 14px Outfit, sans-serif";
+  c.lineWidth = 4;
+  c.strokeStyle = "#082f49";
+  c.strokeText(text, x, y);
+  c.fillStyle = "#f8fafc";
+  c.fillText(text, x, y);
+}
+function drawItem(c, p) {
+  c.save();
+  c.globalAlpha = p.sub ? 0.45 : 1;
+  c.fillStyle = CFG.types[p.type].color;
+  if (p.type === "bottle") c.fillRect(p.x - 4, p.y - 8, 8, 16);
+  else if (p.type === "foam") c.fillRect(p.x - 7, p.y - 5, 14, 10);
+  else {
+    c.beginPath();
+    c.ellipse(p.x, p.y, p.type === "bag" ? 9 : 6, 5, 0.4, 0, 6.28);
+    c.fill();
+  }
+  c.restore();
+}
+function netPath(c, g) {
+  const n = g.net;
+  c.beginPath();
+  c.moveTo(n.x + 6, n.rim);
+  c.lineTo(n.x + 6, n.y + 28);
+  c.quadraticCurveTo(n.x + n.w / 2, n.y + n.h + 18, n.x + n.w - 6, n.y + 28);
+  c.lineTo(n.x + n.w - 6, n.rim);
+}
+function draw() {
+  const g = geo();
+  const ch = g.ch;
+  const freeze = stillFrame();
+  const visT = freeze ? 0 : state.t;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#0c4a6e";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#78716c";
+  ctx.fillRect(ch.x - 10, ch.y - 20, ch.w + 20, 20);
+  ctx.fillRect(ch.x - 10, ch.y + ch.h, ch.w + 20, 168);
+  ctx.fillStyle = "#0369a1";
+  ctx.fillRect(ch.x, ch.y, ch.w, ch.h);
+  if (!freeze) {
+    ctx.strokeStyle = "rgba(255,255,255,0.28)";
+    const shift = (visT * flowMsOf(liveEnv()) * 36 * state.dir) % 36;
+    for (let i = 0; i < 18; i++) {
+      const x = ch.x + ((i * 54 + shift + 800) % ch.w);
+      ctx.beginPath();
+      ctx.moveTo(x, ch.y + 40);
+      ctx.lineTo(x + 22 * state.dir, ch.y + 40);
+      ctx.stroke();
+    }
+  }
+  ctx.save();
+  netPath(ctx, g);
+  ctx.clip();
+  ctx.fillStyle = "rgba(134,239,172,0.18)";
+  ctx.fillRect(g.net.x, g.net.y - 4, g.net.w, g.net.h + 24);
+  ctx.strokeStyle = "rgba(187,247,208,0.85)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = g.net.x; x < g.net.x + g.net.w; x += 8) {
+    ctx.moveTo(x, g.net.y);
+    ctx.lineTo(x, g.net.y + g.net.h + 16);
+  }
+  for (let y = g.net.y; y < g.net.y + g.net.h + 16; y += 8) {
+    ctx.moveTo(g.net.x, y);
+    ctx.lineTo(g.net.x + g.net.w, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = "#86efac";
+  ctx.lineWidth = 3;
+  netPath(ctx, g);
+  ctx.stroke();
+  state.parts.forEach((p) => {
+    if (p.state === "in_channel" || p.state === "deflected" || p.state === "in_net") drawItem(ctx, p);
+  });
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#14b8a6";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(g.tubeA.x, g.tubeA.y);
+  ctx.lineTo(g.tubeC.x, g.tubeC.y);
+  ctx.stroke();
+  if (!freeze) {
+    ctx.fillStyle = "#fff";
+    state.bubbles.forEach((b) => {
+      ctx.globalAlpha = Math.max(0, b.life);
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 3, 0, 6.28);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+  if ($("boom").checked) {
+    ctx.save();
+    if (state.boomOpen) {
+      ctx.translate(g.boomA.x, g.boomA.y);
+      ctx.rotate(-0.85);
+      ctx.translate(-g.boomA.x, -g.boomA.y);
+    }
+    ctx.strokeStyle = "#f97316";
+    ctx.lineWidth = 9;
+    ctx.beginPath();
+    ctx.moveTo(g.boomA.x, g.boomA.y);
+    ctx.lineTo(g.boomC.x, g.boomC.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+  const ang = freeze ? 18 : state.wheelAng;
+  ctx.fillStyle = "#374151";
+  ctx.beginPath();
+  ctx.arc(g.wheel.x, g.wheel.y, 16, 0, 6.28);
+  ctx.fill();
+  for (let i = 0; i < CFG.arms; i++) {
+    const deg = normDeg(ang + i * (360 / CFG.arms));
+    const a = deg * Math.PI / 180;
+    const sx = g.wheel.x + Math.cos(a) * g.wheel.r;
+    const sy = g.wheel.y + Math.sin(a) * g.wheel.r;
+    ctx.strokeStyle = "#e7e5e4";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(g.wheel.x, g.wheel.y);
+    ctx.lineTo(sx, sy);
+    ctx.stroke();
+    ctx.fillStyle = "#0f766e";
+    ctx.beginPath();
+    ctx.arc(sx, sy, 9, 0, 6.28);
+    ctx.fill();
+    ctx.fillStyle = "#ccfbf1";
+    ctx.fillRect(sx - 3, sy - 2, 2, 2);
+    ctx.fillRect(sx + 2, sy + 2, 2, 2);
+  }
+  state.parts.forEach((p) => { if (p.state === "on_wheel") drawItem(ctx, p); });
+  if (!freeze) {
+    state.drips.forEach((d) => {
+      ctx.globalAlpha = Math.max(0, d.life);
+      ctx.fillStyle = "#e0f2fe";
+      ctx.fillRect(d.x, d.y, 3, 3);
+      ctx.globalAlpha = 1;
+    });
+  }
+  ctx.fillStyle = "#1f2937";
+  ctx.fillRect(g.belt.x, g.belt.y, g.belt.w, g.belt.h);
+  ctx.strokeStyle = "#d1d5db";
+  const phase = freeze ? 0 : state.beltPhase;
+  for (let x = 0; x < g.belt.w; x += 16) {
+    const sx = g.belt.x + ((x + phase) % g.belt.w);
+    ctx.beginPath();
+    ctx.moveTo(sx, g.belt.y);
+    ctx.lineTo(sx, g.belt.y + g.belt.h);
+    ctx.stroke();
+  }
+  state.parts.forEach((p) => { if (p.state === "on_belt") drawItem(ctx, p); });
+  const fill = Math.min(1, state.bin / CFG.binCap);
+  ctx.fillStyle = fill >= CFG.binStop ? "#b91c1c" : fill > 0.55 ? "#d97706" : "#15803d";
+  ctx.fillRect(g.bin.x, g.bin.y, g.bin.w, g.bin.h);
+  ctx.fillStyle = "#052e16";
+  ctx.fillRect(g.bin.x + 4, g.bin.y + 4 + (1 - fill) * (g.bin.h - 8), g.bin.w - 8, fill * (g.bin.h - 8));
+  if (state.binHold) label(ctx, "BIN FULL", g.bin.x - 6, g.bin.y - 8);
+  const nf = Math.round((netCount(state) / CFG.netCap) * 100);
+  label(ctx, "Bubble curtain", g.tubeA.x, g.tubeA.y - 10);
+  label(ctx, state.boomOpen ? "Boom OPEN" : "Fixed boom", g.boomA.x + 8, g.boomA.y + 18);
+  label(ctx, "Collection net " + nf + "%", g.net.x - 8, g.net.y + g.net.h + 28);
+  label(ctx, "Interceptor wheel", g.wheel.x - 48, g.wheel.y + g.wheel.r + 18);
+  label(ctx, "Conveyor", g.belt.x + 40, g.belt.y - 8);
+  label(ctx, "Garbage bin", g.bin.x - 8, g.bin.y + g.bin.h + 16);
+  label(ctx, state.dir < 0 ? "Tide reversal (known limitation)" : "Flow →", ch.x + ch.w - 250, ch.y + 18);
+  if (state.t < state.overflowUntil) label(ctx, "Net overflow", g.net.x, g.net.y - 10);
+  label(ctx, "Far bank", ch.x + 8, ch.y + 18);
+  label(ctx, "Collection bank", ch.x + 8, ch.y + ch.h - 10);
+  drawSide(g, freeze);
+}
+function drawSide(g, freeze) {
+  const env = liveEnv();
+  const pct = env.flowPct;
+  const level = 0.32 + pct / 100 * 0.5;
+  const W = side.width, H = side.height;
+  sctx.clearRect(0, 0, W, H);
+  sctx.fillStyle = "#0f172a";
+  sctx.fillRect(0, 0, W, H);
+  const left = 48, right = W - 48;
+  const bed = H - 36;
+  const surface = bed - 28 - level * 110;
+  sctx.fillStyle = "#57534e";
+  sctx.fillRect(left, bed, right - left, 22);
+  sctx.fillStyle = "#0369a1";
+  sctx.fillRect(left, surface, right - left, bed - surface);
+  sctx.fillStyle = "rgba(255,255,255,0.2)";
+  sctx.fillRect(left, surface, right - left, 3);
+  sctx.fillStyle = "#14b8a6";
+  sctx.fillRect(left + 160, bed - 8, 120, 8);
+  sctx.fillStyle = "#f97316";
+  sctx.fillRect(left + 210, surface - 6, 110, 8);
+  const bubOn = bubbleMode(state, env) !== "off";
+  if (bubOn) {
+    for (let i = 0; i < 7; i++) {
+      const span = bed - surface;
+      const y = freeze ? bed - 12 - i * (span / 8) : bed - ((state.t * 36 + i * 18) % span);
+      sctx.fillStyle = "#fff";
+      sctx.beginPath();
+      sctx.arc(left + 176 + i * 14, y, 4, 0, 6.28);
+      sctx.fill();
+    }
+  }
+  sctx.globalAlpha = 0.5;
+  sctx.fillStyle = "#94a3b8";
+  sctx.fillRect(left + 188, (surface + bed) / 2, 14, 10);
+  sctx.globalAlpha = 1;
+  sctx.fillStyle = "#fbbf24";
+  sctx.fillRect(left + 248, surface - 16, 8, 14);
+  sctx.fillStyle = "#e2e8f0";
+  sctx.font = "600 16px Outfit, sans-serif";
+  sctx.fillText("Side view · water depth " + level.toFixed(2) + " m", left, 28);
+  sctx.font = "14px Outfit, sans-serif";
+  sctx.fillText("Bed tube sends bubbles up. They lift submerged plastic to the boom.", left, 50);
+  sctx.fillText("Bed tube", left + 160, bed + 18);
+  sctx.fillText("Boom at surface", left + 210, surface - 12);
+}
+function setBar(id, pct, color) {
+  const el = $(id);
+  el.style.width = Math.max(0, Math.min(100, pct)) + "%";
+  el.style.background = color || "#0f766e";
+}
+function paintDash() {
+  const env = liveEnv();
+  const pct = env.flowPct;
+  const c = counts(state);
+  $("flowv").textContent = pct + "%";
+  $("ratev").textContent = $("rate").value + "/s";
+  $("mflow").textContent = flowMsOf(env).toFixed(2) + " m/s";
+  setBar("bflow", pct);
+  const shown = state.boomOpen ? rawLoadOf(env) * 0.2 : rawLoadOf(env);
+  $("mload").textContent = shown.toFixed(2) + (state.boomOpen ? " (open)" : "");
+  setBar("bload", shown * 100, shown > 0.7 ? "#c2410c" : "#0f766e");
+  let amps = wheelShouldSpin(state) ? 1.1 + flowMsOf(env) * 0.55 : 0.15;
+  if (state.jam && state.jam.phase === "spike") amps = 8.4;
+  if (state.fault) amps = 0;
+  $("mcur").textContent = amps.toFixed(1) + " A";
+  setBar("bcur", (amps / 10) * 100, amps > 6 ? "#b91c1c" : "#0f766e");
+  const air = airKpa(state, env);
+  $("mair").textContent = air + " kPa";
+  setBar("bair", (air / 42) * 100);
+  const level = 0.32 + pct / 100 * 0.5;
+  $("mlevel").textContent = level.toFixed(2) + " m";
+  setBar("blevel", ((level - 0.3) / 0.55) * 100, "#0369a1");
+  const fill = Math.min(1, state.bin / CFG.binCap);
+  $("mbin").textContent = Math.round(fill * 100) + "%";
+  setBar("bbin", fill * 100, fill >= CFG.binStop ? "#b91c1c" : "#0f766e");
+  $("cspawn").textContent = state.spawned;
+  $("ccap").textContent = c.captured;
+  $("cbin").textContent = state.bin;
+  $("cesc").textContent = state.escaped;
+  $("cpct").textContent = c.ratio === null ? "–" : Math.round(c.ratio * 100) + "%";
+  const ok = c.sum === state.spawned;
+  $("acct").innerHTML =
+    "<span>Spawned " + state.spawned + "</span>" +
+    "<span>In channel " + c.in_channel + "</span>" +
+    "<span>Deflected " + c.deflected + "</span>" +
+    "<span>In net " + c.in_net + "</span>" +
+    "<span>On wheel " + c.on_wheel + "</span>" +
+    "<span>On belt " + c.on_belt + "</span>" +
+    "<span>In bin " + c.in_bin + "</span>" +
+    "<span>Escaped " + c.escaped + "</span>" +
+    "<span class=\"" + (ok ? "ok" : "bad") + "\">" + (ok ? "Reconciles" : "Mismatch") + "</span>";
+  const badge = $("badge");
+  badge.textContent = { normal: "NORMAL", high: "HIGH-FLOW", fault: "FAULT", maint: "MAINTENANCE" }[state.mode];
+  badge.className = "badge" + (state.mode === "high" ? " high" : state.mode === "fault" || state.mode === "maint" ? " fault" : "");
+  $("log").innerHTML = state.log.map((l) => "<div>" + l + "</div>").join("");
+  drawComp();
+  drawTrend();
+  drawBars();
+}
+function ink() { return getComputedStyle(document.body).color; }
+function chartBg(c, w, h) {
+  c.clearRect(0, 0, w, h);
+  c.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel") || "#fffdf8";
+  c.fillRect(0, 0, w, h);
+}
+function drawComp() {
+  const cv = $("comp");
+  const c = cv.getContext("2d");
+  chartBg(c, cv.width, cv.height);
+  c.fillStyle = ink();
+  c.font = "600 14px Outfit, sans-serif";
+  c.fillText("Reached the net, by type", 12, 22);
+  const keys = Object.keys(state.byType);
+  const max = Math.max(1, ...keys.map((k) => state.byType[k]));
+  const any = keys.some((k) => state.byType[k] > 0);
+  if (!any) {
+    c.font = "14px Outfit, sans-serif";
+    c.fillStyle = "#57534e";
+    c.fillText("None in the net yet.", 12, 48);
+  }
+  keys.forEach((k, i) => {
+    const x = 16 + i * 68;
+    c.fillStyle = "#e7e5e4";
+    c.fillRect(x, 40, 40, 80);
+    c.fillStyle = CFG.types[k].color;
+    const h = 80 * state.byType[k] / max;
+    if (state.byType[k] > 0) c.fillRect(x, 120 - h, 40, h);
+    c.fillStyle = ink();
+    c.font = "13px Outfit, sans-serif";
+    c.fillText(k, x, 140);
+    c.fillText(String(state.byType[k]), x, 156);
+  });
+}
+function drawTrend() {
+  const cv = $("trend");
+  const c = cv.getContext("2d");
+  chartBg(c, cv.width, cv.height);
+  c.fillStyle = ink();
+  c.font = "600 14px Outfit, sans-serif";
+  c.fillText("Capture % vs flow", 12, 20);
+  c.strokeStyle = "#a8a29e";
+  c.strokeRect(40, 32, 300, 110);
+  c.font = "12px Outfit, sans-serif";
+  c.fillText("100", 8, 40);
+  c.fillText("0", 22, 142);
+  c.fillText("Flow 0", 40, 158);
+  c.fillText("100%", 300, 158);
+  c.strokeStyle = "#d6d3d1";
+  c.beginPath();
+  c.moveTo(40, 142);
+  c.lineTo(340, 142);
+  c.stroke();
+  if (!state.trend.length) {
+    c.fillStyle = "#57534e";
+    c.fillText("Move the flow slider after a few items to plot points.", 48, 90);
+    return;
+  }
+  state.trend.forEach((pt) => {
+    c.fillStyle = "#0f766e";
+    c.beginPath();
+    c.arc(40 + (pt.p / 100) * 300, 142 - pt.c * 110, 4, 0, 6.28);
+    c.fill();
+  });
+}
+function drawBars() {
+  const cv = $("bars");
+  const c = cv.getContext("2d");
+  chartBg(c, cv.width, cv.height);
+  c.fillStyle = ink();
+  c.font = "600 14px Outfit, sans-serif";
+  c.fillText("Capture % by layout", 12, 20);
+  c.strokeStyle = "#a8a29e";
+  c.strokeRect(36, 32, 300, 120);
+  c.font = "12px Outfit, sans-serif";
+  c.fillText("100", 6, 40);
+  c.fillText("0", 20, 152);
+  if (!state.cmp) {
+    c.fillStyle = "#57534e";
+    c.font = "14px Outfit, sans-serif";
+    c.fillText("Run comparison to fill this chart.", 56, 96);
+    return;
+  }
+  const flows = [20, 40, 60, 80];
+  const names = ["bubble", "boom", "both"];
+  const colors = ["#14b8a6", "#f97316", "#15803d"];
+  flows.forEach((sp, si) => {
+    names.forEach((n, ni) => {
+      const v = state.cmp[n][si] || 0;
+      c.fillStyle = colors[ni];
+      c.fillRect(52 + si * 72 + ni * 16, 152 - v * 120, 14, v * 120);
+    });
+    c.fillStyle = ink();
+    c.fillText(sp + "%", 56 + si * 72, 168);
+  });
+  names.forEach((n, ni) => {
+    c.fillStyle = colors[ni];
+    c.fillRect(40 + ni * 90, 180, 12, 12);
+    c.fillStyle = ink();
+    c.fillText(n, 56 + ni * 90, 191);
+  });
+}
+function runOne(layout, pct) {
+  const sim = blank();
+  const env = {
+    flowPct: pct, bubOn: layout !== "boom", boomOn: layout !== "bubble",
+    flood: false, rate: CFG.compareRate, bubMode: "keep",
+    rand: mulberry32(CFG.compareSeed), live: false
+  };
+  let t = 0;
+  while (t < CFG.compareSec) { step(sim, env, CFG.dt); t += CFG.dt; }
+  const c = counts(sim);
+  return c.ratio === null ? 0 : c.ratio;
+}
+async function runComparison() {
+  if (comparing) return;
+  comparing = true;
+  paused = true;
+  $("pause").textContent = "Play";
+  $("compare").disabled = true;
+  state.cmp = { bubble: [], boom: [], both: [] };
+  const jobs = [];
+  ["bubble", "boom", "both"].forEach((layout) => {
+    [20, 40, 60, 80].forEach((sp) => jobs.push({ layout, sp }));
+  });
+  for (let i = 0; i < jobs.length; i++) {
+    $("cmpprog").textContent = "Comparing " + (i + 1) + " / " + jobs.length + "…";
+    await new Promise((r) => setTimeout(r, 20));
+    state.cmp[jobs[i].layout].push(runOne(jobs[i].layout, jobs[i].sp));
+    drawBars();
+  }
+  $("cmpnote").hidden = false;
+  $("cmpprog").textContent = "Comparison done";
+  $("compare").disabled = false;
+  comparing = false;
+  log(state, "Comparison finished (placeholder model)");
+  paintDash();
+}
+function frame(now) {
+  const elapsed = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (!paused && !comparing && !reduceMotion.matches) {
+    acc += elapsed * speeds[speedI];
+    const env = liveEnv();
+    while (acc >= CFG.dt) { step(state, env, CFG.dt); acc -= CFG.dt; }
+  }
+  draw();
+  paintDash();
+  requestAnimationFrame(frame);
+}
+$("flow").addEventListener("input", () => {
+  const c = counts(state);
+  if (c.ratio !== null) {
+    state.trend.push({ p: Number($("flow").value), c: c.ratio });
+    state.trend = state.trend.slice(-40);
+    state.lastTrendFlow = Number($("flow").value);
+  }
+});
+$("pause").onclick = () => { paused = !paused; $("pause").textContent = paused ? "Play" : "Pause"; };
+$("spd").onclick = () => { speedI = (speedI + 1) % speeds.length; $("spd").textContent = "Speed " + speeds[speedI] + "×"; };
+$("reset").onclick = () => {
+  const fresh = blank();
+  Object.keys(state).forEach((k) => delete state[k]);
+  Object.assign(state, fresh);
+  log(state, "Reset");
+};
+$("jam").onclick = () => {
+  if (state.fault || state.binHold) return;
+  state.jam = { phase: "spike", t: 0.45 };
+  state.maint = false;
+  log(state, "Jam triggered: current spike");
+};
+$("fault").onclick = () => { state.fault = true; log(state, "Sensor fault: wheel, belt and air pump stopped"); };
+$("empty").onclick = () => { state.bin = 0; state.binHold = false; log(state, "Bin emptied"); };
+$("tide").onclick = () => { state.tideUntil = state.t + CFG.tideSec; log(state, "Tide reversal for " + CFG.tideSec + " s (known limitation)"); };
+$("compare").onclick = runComparison;
+log(state, "Mode NORMAL");
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
